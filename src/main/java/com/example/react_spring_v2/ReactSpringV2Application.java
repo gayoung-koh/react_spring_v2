@@ -1,7 +1,7 @@
 package com.example.react_spring_v2;
 
-import com.example.react_spring_v2.domain.user.User;
-import com.example.react_spring_v2.domain.user.UserRepository;
+import com.example.react_spring_v2.domain.post.Post;
+import com.example.react_spring_v2.domain.post.PostRepository;
 import java.time.LocalDateTime;
 import java.util.stream.IntStream;
 import org.springframework.boot.CommandLineRunner;
@@ -17,19 +17,15 @@ public class ReactSpringV2Application {
   }
 
   @Bean
-  public CommandLineRunner runner(UserRepository userRepository)
+  public CommandLineRunner runner(PostRepository postRepository)
     throws Exception {
     return args -> {
       IntStream
         .rangeClosed(1, 10)
         .forEach(
           index ->
-            userRepository.save(
-              User
-                .builder()
-                .username("username" + index)
-                .password("password" + index)
-                .build()
+            postRepository.save(
+              Post.builder().title("title" + index).body("test" + index).build()
             )
         );
     };
