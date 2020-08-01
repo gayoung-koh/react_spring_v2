@@ -1,4 +1,4 @@
-package com.example.react_spring_v2.domain;
+package com.example.react_spring_v2.domain.todo;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

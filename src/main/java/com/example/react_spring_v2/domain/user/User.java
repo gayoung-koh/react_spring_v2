@@ -1,48 +1,71 @@
 package com.example.react_spring_v2.domain.user;
 
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import javax.persistence.*;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
-@Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
-@Table
-public class User implements Serializable {
-  private static final long serialVersionUID = -947585423656694361L;
+public class User implements UserDetails, Serializable {
 
   @Id
   @Column
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column
-  private String username;
+  @Column(nullable = false, unique = true)
+  private String name;
 
-  @Column
+  @Column(nullable = false)
   private String password;
 
-  @Builder
-  public User(Long id, String username, String password) {
-    this.id = id;
-    this.username = username;
-    this.password = password;
+  @ElementCollection(fetch = FetchType.EAGER)
+  @Builder.Default
+  private List<String> roles = new ArrayList<>();
+
+  @Override
+  public Collection<? extends GrantedAuthority> getAuthorities() {
+    return this.roles.stream()
+        .map(SimpleGrantedAuthority::new)
+        .collect(Collectors.toList());
   }
 
   @Override
-  public String toString() {
-    return (
-      "User [id=" + id + ", name=" + username + ", password=" + password + "]"
-    );
+  public String getUsername() {
+    return name;
+  }
+
+  @Override
+  public boolean isAccountNonExpired() {
+    return true;
+  }
+
+  @Override
+  public boolean isAccountNonLocked() {
+    return true;
+  }
+
+  @Override
+  public boolean isCredentialsNonExpired() {
+    return true;
+  }
+
+  @Override
+  public boolean isEnabled() {
+    return true;
   }
 }

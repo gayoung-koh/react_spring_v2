@@ -2,19 +2,14 @@ package com.example.react_spring_v2.domain.post;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import java.util.List;
+import javax.persistence.*;
+
+import lombok.*;
 
 @Getter
 @Setter
+@ToString
 @NoArgsConstructor
 @Entity
 @Table
@@ -29,18 +24,21 @@ public class Post implements Serializable {
   @Column
   private String title;
 
-  @Column
+  @Column(length = 600)
   private String body;
 
+  @Column
+  private String tags;
+
+  @Column
+  private LocalDateTime publishedDate;
+
   @Builder
-  public Post(Long id, String title, String body) {
+  public Post(Long id, String title, String body, String tags, LocalDateTime publishedDate) {
     this.id = id;
     this.title = title;
     this.body = body;
-  }
-
-  @Override
-  public String toString() {
-    return ("Post [id=" + id + ", title=" + title + ", body=" + body + "]");
+    this.tags = tags;
+    this.publishedDate = publishedDate;
   }
 }

@@ -1,78 +1,56 @@
 package com.example.react_spring_v2.controller;
 
+import com.example.react_spring_v2.config.security.JwtTokenProvider;
+import com.example.react_spring_v2.config.security.UnauthorizedExeption;
+import com.example.react_spring_v2.domain.post.Post;
 import com.example.react_spring_v2.domain.user.User;
-import com.example.react_spring_v2.service.UserService;
-import java.time.LocalDateTime;
-import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Direction;
+import com.example.react_spring_v2.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
+import org.hibernate.action.internal.CollectionUpdateAction;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.security.access.AuthorizationServiceException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.client.HttpClientErrorException;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Optional;
+
+@RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/auth/register")
 public class UserController {
-  @Autowired
-  private UserService userService;
+  private final PasswordEncoder passwordEncoder;
+  private final JwtTokenProvider jwtTokenProvider;
+  private final UserRepository userRepository;
 
-  /*
-   *     목록 조회
-   */
-  @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-  public ResponseEntity<?> getUsers() throws Exception {
-    List<User> users = userService.getUsers(Sort.by(Direction.ASC, "id"));
-    return ResponseEntity.ok(users);
+  // 회원가입
+  @PostMapping("/api/auth/register")
+  public ResponseEntity<?> register(@RequestBody User user) {
+    Optional<User> foundUser = userRepository.findByName(user.getName());
+    if(foundUser.isPresent()) {
+      return new ResponseEntity<String>("Conflict",HttpStatus.CONFLICT);
+    }
+    User returnedUser = userRepository.save(User.builder().name(user.getName()).password(passwordEncoder.encode(user.getPassword())).roles(Collections.singletonList("ROLE_USER")).build());
+    return ResponseEntity.ok(returnedUser);
   }
 
-  @GetMapping("/{id}")
-  public ResponseEntity<User> getUser(@PathVariable("id") Long id)
-    throws Exception {
-    User user = userService.getUser(id);
-
-    return ResponseEntity.ok(user);
-  }
-
-  /*
-   *     등록
-   */
-  @PostMapping
-  public ResponseEntity<String> postUser(@RequestBody User user)
-    throws Exception {
-    userService.postUser(user);
-    return new ResponseEntity<String>("SUCCESS", HttpStatus.OK);
-  }
-
-  /*
-   *     수정
-   */
-  @PutMapping("/{id}")
-  public ResponseEntity<String> putUser(@PathVariable("id") Long id)
-    throws Exception {
-    User user = userService.findUserById(id);
-
-    userService.postUser(user);
-
-    return new ResponseEntity<String>("SUCCESS", HttpStatus.OK);
-  }
-
-  /*
-   *     삭제
-   */
-  @DeleteMapping("/{id}")
-  public ResponseEntity<String> deleteUser(@PathVariable("id") Long id)
-    throws Exception {
-    userService.deleteUser(id);
-
-    return new ResponseEntity<String>("SUCCESS", HttpStatus.OK);
+  // 로그인
+  @PostMapping("/api/auth/login")
+  public String login(@RequestBody Map<String, String> user) {
+    User member = userRepository.findByName(user.get("name"))
+        .orElseThrow(() ->
+            new UnauthorizedExeption("가입되지 않은 id 입니다.")
+                //IllegalArgumentException("가입되지 않은 id 입니다.")
+        );
+    if(!passwordEncoder.matches(user.get("password"), member.getPassword())) {
+      throw new UnauthorizedExeption("잘못된 비밀번호입니다.");
+    }
+    return jwtTokenProvider.createToken(member.getUsername(), member.getRoles());
   }
 }

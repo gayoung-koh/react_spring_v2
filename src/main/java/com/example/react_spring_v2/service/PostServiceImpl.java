@@ -1,9 +1,13 @@
 package com.example.react_spring_v2.service;
 
 import com.example.react_spring_v2.domain.post.Post;
-import com.example.react_spring_v2.domain.post.PostRepository;
+import com.example.react_spring_v2.repository.PostRepository;
+
 import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -13,8 +17,8 @@ public class PostServiceImpl implements PostService {
   private PostRepository postRepository;
 
   @Override
-  public List<Post> getPosts(Sort sort) throws Exception {
-    return postRepository.findAll(sort);
+  public List<Post> getPosts(Pageable pageable) throws Exception {
+    return postRepository.findAll(pageable).getContent();
   }
 
   @Override
@@ -23,8 +27,8 @@ public class PostServiceImpl implements PostService {
   }
 
   @Override
-  public void postPost(Post post) throws Exception {
-    postRepository.save(post);
+  public Post postPost(Post post) throws Exception {
+    return postRepository.save(post);
   }
 
   @Override
