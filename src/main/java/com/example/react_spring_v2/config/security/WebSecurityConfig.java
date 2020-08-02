@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @RequiredArgsConstructor
 @EnableWebSecurity
@@ -31,6 +33,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   }
 
   @Override
+  public void configure(WebSecurity web) throws Exception
+  {
+    // static 디렉터리의 하위 파일 목록은 인증 무시 ( = 항상통과 )
+    web.ignoring().antMatchers("/css/**", "/js/**", "/img/**", "/lib/**");
+  }
+
+  @Override
   protected void configure(HttpSecurity http) throws Exception {
     http.httpBasic().disable() // rest api 만을 고려하여 기본 설정은 해제하겠습니다.
         .csrf().disable() // csrf 보안 토큰 disable처리
@@ -40,6 +49,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         .antMatchers("/admin/**").hasRole("ADMIN")
         .antMatchers("/user/**").hasRole("USER")
         .antMatchers("/**").permitAll() // 그외 나머지 요청은 누구나 접근 가능
+        //.and()
+        //.logout().logoutRequestMatcher(new AntPathRequestMatcher("/api/auth/logout")).logoutSuccessUrl("/api/auth/logout/result")
         .and()
         .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
             UsernamePasswordAuthenticationFilter.class);  // JwtAuthenticationFilter를 UsernamePasswordAuthenticationFilter 전에 넣는다
