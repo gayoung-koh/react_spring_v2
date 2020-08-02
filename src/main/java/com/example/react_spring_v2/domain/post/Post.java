@@ -33,12 +33,16 @@ public class Post implements Serializable {
   @Column
   private LocalDateTime publishedDate;
 
+  @Column
+  private String username;
+
   @Builder
-  public Post(Long id, String title, String body, String tags, LocalDateTime publishedDate) {
+  public Post(Long id, String title, String body, String tags, LocalDateTime publishedDate, String username) {
     this.id = id;
     this.title = title;
     this.body = body;
     this.tags = tags;
     this.publishedDate = publishedDate;
+    this.username = username;
   }
 }
